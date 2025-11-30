@@ -1,0 +1,50 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+*.iml
+.idea/
+.vscode/
+*.class
+
+# Eclipse  
+.settings/
+.metadata/
+bin/
+tmp/
+*.log
+*.bak
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Maven Wrapper
+.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+
+# Gradle Wrapper (혹시 모르니)
+.gradle/
+build/
+
+# IDE Specific (이클립스, 인텔리제이 등)
+.classpath
+.project
+.settings
+.springBeans
+.factorypath
+target/
+
+# Other
+*.zip
+*.tar.gz
+*.jar
+*.war
+*.log
+
+# Lombok generated files
