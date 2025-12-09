@@ -1,50 +1,60 @@
-# Maven
-target/
-!.mvn/wrapper/maven-wrapper.jar
-
-# IDE
-*.iml
-.idea/
-.vscode/
+# Compiled class files
 *.class
 
-# Eclipse  
-.settings/
-.metadata/
-bin/
-tmp/
+# Log files
 *.log
-*.bak
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
+log/
 logs/
-*.log
 
-# Maven Wrapper
-.mvn/wrapper/maven-wrapper.jar
-.mvn/wrapper/maven-wrapper.properties
-
-# Gradle Wrapper (혹시 모르니)
-.gradle/
-build/
-
-# IDE Specific (이클립스, 인텔리제이 등)
-.classpath
-.project
-.settings
-.springBeans
-.factorypath
-target/
-
-# Other
-*.zip
-*.tar.gz
+# Package Files
 *.jar
 *.war
-*.log
+*.ear
+*.zip
+*.tar.gz
+*.rar
 
-# Lombok generated files
+# IDEA / Eclipse Project files
+.project
+.classpath
+.settings/
+.mvn/
+.factorypath
+.metadata/
+target/
+bin/
+tmp/
+*.iml
+*.ipr
+*.iws
+.idea/
+build/
+.DS_Store
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Maven / Gradle
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.idea/
+.gradle/
+gradle/
+out/
+
+# Local configuration files (e.g., sensitive info)
+application*.yml
+application*.properties
+*.bak
+
+# Spring Boot Actuator's external log directory
+/target/*.jar.original
+
+# macOS specific files
+.DS_Store
+.idea/
