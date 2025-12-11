@@ -4,6 +4,9 @@ import com.example.MySpringBootBoard.entity.Board; // Board 엔티티 임포트
 import com.example.MySpringBootBoard.repository.BoardRepository; // BoardRepository 임포트
 //import lombok.RequiredArgsConstructor; // Lombok 어노테이션
 import org.springframework.stereotype.Service; // @Service 임포트
+import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import java.util.List; // List 임포트
@@ -38,13 +41,27 @@ public class BoardService {
     }
     // ⭐⭐⭐⭐ 새롭게 추가: 특정 ID의 게시글을 가져오는 메서드 ⭐⭐⭐⭐
     public Board getBoard(Integer id) {
+        // 💡 디버깅 코드 시작!
+        System.out.println("DEBUG: BoardService.getBoard 메서드 진입 - 요청 ID: " + id);
+        Optional<Board> optionalBoard = boardRepository.findById(id);
         // findById는 Optional<Board>를 반환. 값이 없을 경우 예외 처리
         Optional<Board> boardOptional = this.boardRepository.findById(id);
         if (boardOptional.isPresent()) {
             return boardOptional.get();
         } else {
-            // TODO: 게시글을 찾을 수 없을 때 사용자에게 적절한 에러 페이지나 메시지를 보여주도록 개선 필요
-            throw new RuntimeException("board not found");
+        	return null;
         }
     }
+    // 💡 4. 게시글 수정 메서드 (누락되었을 수 있는 이 부분!)
+    @Transactional // ⚠️ 트랜잭션 처리를 위해 추가!
+    public void updateBoard(Board board) {
+        boardRepository.findById(board.getId()).ifPresent(existingBoard -> {
+            existingBoard.setTitle(board.getTitle());
+            existingBoard.setAuthor(board.getAuthor());
+            existingBoard.setContent(board.getContent());
+            existingBoard.setModifyDate(LocalDateTime.now()); // 수정 시간 기록
+            boardRepository.save(existingBoard);
+        });
+}
+    
 }

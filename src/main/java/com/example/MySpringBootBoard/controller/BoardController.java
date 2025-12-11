@@ -8,6 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PathVariable;
 import java.util.List;
 
 // @RequiredArgsConstructor // 수동 생성자를 만들 거니, 이 어노테이션은 없거나 주석 처리해도 돼!
@@ -44,5 +45,45 @@ public class BoardController { // 파일 이름도 BoardController.java로 변�
         // 게시글 저장이 완료되면 게시글 목록 페이지로 리다이렉트
         return "redirect:/board/list";
     }
+ // 3. 게시글 상세 페이지 보여주기 (⚠️ 이 부분을 확인해 줘!)
+    @GetMapping("/board/detail/{id}")
+    public String getBoard(@PathVariable("id") Integer id, Model model) {
+        // boardService.getBoard(id) 가 제대로 데이터를 가져오는지도 중요해!
+        // 만약 데이터가 없으면 Thymeleaf 템플릿 처리 중에 에러가 날 수도 있어.
+        model.addAttribute("board", boardService.getBoard(id));
+        return "board_detail"; // 💡 여기서 "board_detail" 이 정확한지, 오타는 없는지 확인!
+    }
+ // 💡 5. 게시글 수정 처리하는 POST 요청 처리
+    @PostMapping("/board/update/{id}")
+    public String boardUpdate(@PathVariable("id") Integer id, Board board) {
+        // 경로 변수로 받은 id가 board 객체의 id와 다를 경우를 대비해 설정
+        board.setId(id);
+        
+        // boardService의 업데이트 메서드 호출
+        boardService.updateBoard(board);
+        
+        // 수정 완료 후 해당 게시글의 상세 페이지로 리다이렉트
+        return "redirect:/board/detail/" + board.getId();
+    }
+    @GetMapping("/board/modify/{id}")
+    public String boardModifyForm(@PathVariable("id") Integer id, Model model) {
+        // 💡 디버깅 코드 시작!
+        System.out.println("DEBUG: boardModifyForm 메서드 진입 - 요청 ID: " + id);
 
+        Board board = boardService.getBoard(id); // 서비스로부터 게시글 가져오기
+
+        if (board == null) { // 💡 게시글이 null인지 확인
+            System.out.println("DEBUG: boardService.getBoard(" + id + ") 결과, 게시글을 찾을 수 없습니다 (null).");
+            // TODO: 에러 페이지 또는 메시지 처리 로직 추가 필요
+            // 임시로 목록으로 리다이렉트 (실제 운영 시에는 404 페이지나 적절한 에러 처리 필요)
+            return "redirect:/board/list";
+        }
+        System.out.println("DEBUG: boardService.getBoard(" + id + ") 결과 - 제목: " + board.getTitle());
+
+        model.addAttribute("board", board); // 찾은 게시글을 모델에 추가
+        System.out.println("DEBUG: 모델에 'board' 객체 추가 완료. board_modify.html로 이동합니다.");
+        // 💡 디버깅 코드 끝!
+
+        return "board_modify"; // board_modify.html 템플릿을 찾아라!
+    }
 }

@@ -22,7 +22,7 @@ logs/
 .factorypath
 .metadata/
 target/
-bin/
+bin/w
 tmp/
 *.iml
 *.ipr
