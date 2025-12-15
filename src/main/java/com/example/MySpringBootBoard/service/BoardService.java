@@ -62,6 +62,13 @@ public class BoardService {
             existingBoard.setModifyDate(LocalDateTime.now()); // 수정 시간 기록
             boardRepository.save(existingBoard);
         });
+    }
+     // 💡 5. 게시글 삭제 메서드
+        public void deleteBoard(Integer id) {
+            System.out.println("DEBUG: BoardService.deleteBoard 메서드 진입 - 삭제 요청 ID: " + id); // 디버그 추가
+            boardRepository.deleteById(id); // Spring Data JPA에서 제공하는 ID로 삭제 메서드
+            System.out.println("DEBUG: BoardService.deleteBoard - 게시글 ID " + id + " 삭제 완료."); // 디버그 추가
+        
 }
     
 }

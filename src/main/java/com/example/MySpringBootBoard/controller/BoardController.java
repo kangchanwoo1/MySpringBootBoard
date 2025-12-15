@@ -86,4 +86,13 @@ public class BoardController { // 파일 이름도 BoardController.java로 변�
 
         return "board_modify"; // board_modify.html 템플릿을 찾아라!
     }
+    @GetMapping("/board/delete/{id}")
+    public String boardDelete(@PathVariable("id") Integer id) {
+        System.out.println("DEBUG: boardDelete 메서드 진입 - 삭제 요청 ID: " + id); // 디버그 추가
+        boardService.deleteBoard(id); // boardService의 삭제 메서드 호출
+        System.out.println("DEBUG: boardDelete - 게시글 ID " + id + " 삭제 처리 완료."); // 디버그 추가
+
+        // 삭제 완료 후 게시글 목록 페이지로 리다이렉트
+        return "redirect:/board/list";
+    }
 }
