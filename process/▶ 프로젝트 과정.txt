@@ -156,7 +156,34 @@ pom.xml의 maven-compiler-plugin 내 annotationProcessorPaths에 Lombok <version
 4. 해결 과정 : java.util.Optional import 추가: BoardService.java 파일 상단에 import java.util.Optional; 구문을 추가하여 Optional cannot be resolved 에러 해결.
 5. 해결과정 : BoardRepository.java 인터페이스에 Optional<Board> findById(Integer id) 라인에 @Override추가
 
-
+▶ 프로젝트 동작구조 관련
+※ 전체적인 흐름
+1. URL 사용자 요청
+-> http://localhost:8080/board/list -> 해당 주소로 GET요청을 보냄
+2. Controller
+-> 서블릿이 /board/list라는 GET 요청을 받으면, 이 요청을 처리할 적절한 @Controller를 찾기 시작
+-> 웹 요청을 직접 받아 처리하고,  어떤 Service를 호출할지 결정. 데이터를 Model에 담아서 View에게 전달하는 역할
+-> BoardService로부터 List<Board> 형태의 게시글 데이터를 받아와서, model.addAttribute("list", ...) 코드를 통해 이 데이터를 model에 "list"라는 이름으로 담음
+-> return "board_list"; 코드를 통해 어떤 View (HTML 파일)를 사용자에게 보여줄지 DispatcherServlet에게 알려줌
+3. Service
+-> 실제 '비즈니스 로직'을 처리하는 핵심 계층
+-> Controller로부터 받은 요청을 바탕으로 여러 Repository를 조합하거나 데이터 가공, 유효성 검사 등 순수한 핵심 로직을 담당
+-> BoardController가 boardService.boardList()를 호출하면, BoardService의 boardList() 메서드가 실행
+-> 이 메서드는 boardRepository.findAll()을 호출해서 BoardRepository에게 모든 게시글 데이터를 DB에서 가져오라고 요청
+-> BoardRepository로부터 List<Board> 데이터를 받아 BoardController에게 다시 반환
+4. Repository
+->  데이터베이스에 직접 접근해서 데이터를 CRUD (생성, 조회, 수정, 삭제)하는 역할
+-> BoardService가 boardRepository.findAll()을 호출하면, JPA가 이 호출을 가로채서 Board 엔티티의 정보를 바탕으로 실제 데이터베이스에 맞는 SQL 쿼리(예: SELECT * FROM board)를 생성
+-> 생성된 SQL 쿼리를 MySQL 데이터베이스로 전송.
+-> 데이터베이스로부터 조회된 결과(테이블 레코드)를 받아 Board 엔티티 객체로 변환해서 (Board 객체의 리스트로 만듦) BoardService에게 반환
+5. Entity
+-> 데이터베이스의 테이블과 1:1로 매핑되는 자바 객체(설계도). Board 엔티티는 board 테이블의 레코드(행) 하나를 표현
+6. DB
+-> board 테이블이 실제로 존재하고, 여기에 게시글 데이터들이 물리적으로 저장되어 있어. JPA가 요청한 SQL 쿼리를 처리하고 결과를 다시 JPA에게 전달
+7. View (Thymeleaf HTML)
+-> Controller가 return "board_list";와 같이 논리적인 뷰 이름만 넘겨주면, View Resolver가 이를 받아서 templates 폴더에서 board_list.html 파일을 찾아 View로 지정
+-> Controller로부터 Model에 담겨 넘어온 데이터를 가지고 최종적으로 사용자에게 보여줄 HTML 페이지를 '렌더링'
+-> board_list.html 파일은 Thymeleaf 문법(th:each, th:text 등)을 사용해서 Controller에서 Model에 담아준 "list" 데이터를 실제 게시글 제목과 내용으로 채워 넣고 동적으로 HTML을 생성
 
 
 
