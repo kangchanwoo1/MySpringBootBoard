@@ -3,30 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <title>게시글 작성</title>
-    <!-- 부트스트랩 CSS 추가 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .form-control { margin-bottom: 10px; }
+        .btn { margin-right: 5px; }
+    </style>
 </head>
 <body class="container mt-4">
-    <h1 class="mb-4">새 게시글 작성</h1>
-    <!-- action="/board/write"로 폼 데이터를 POST 요청으로 보낼 거야 -->
-    <form action="/board/write" method="post">
+    <h1 class="mb-4">게시글 작성</h1>
+    <!-- 💡 form 제출 시 "/board/writepro" 경로로 POST 요청을 보냄 -->
+    <!-- 💡 enctype="multipart/form-data" 속성이 반드시 있어야 함! -->
+    <form th:action="@{/board/writepro}" method="post" enctype="multipart/form-data">
         <div class="mb-3">
             <label for="title" class="form-label">제목</label>
-            <input type="text" class="form-control" id="title" name="title" required>
-        </div>
-        <div class="mb-3">
-            <label for="content" class="form-label">내용</label>
-            <textarea class="form-control" id="content" name="content" rows="10" required></textarea>
+            <input type="text" id="title" name="title" class="form-control" placeholder="제목을 입력하세요" required>
         </div>
         <div class="mb-3">
             <label for="author" class="form-label">작성자</label>
-            <input type="text" class="form-control" id="author" name="author" required>
+            <input type="text" id="author" name="author" class="form-control" placeholder="작성자를 입력하세요" required>
         </div>
+        <div class="mb-3">
+            <label for="content" class="form-label">내용</label>
+            <textarea id="content" name="content" class="form-control" rows="10" placeholder="내용을 입력하세요" required></textarea>
+        </div>
+        <!-- 💡💡💡 파일 선택 입력 필드 추가 (이 부분이 꼭 있어야 함!) 💡💡💡 -->
+        <div class="mb-3">
+            <label for="files" class="form-label">파일 첨부</label>
+            <input type="file" id="files" name="files" class="form-control" multiple>
+        </div>
+
         <button type="submit" class="btn btn-primary">작성 완료</button>
         <a href="/board/list" class="btn btn-secondary">목록으로</a>
     </form>
 
-    <!-- 부트스트랩 JS 추가 -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

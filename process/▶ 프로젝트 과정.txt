@@ -185,7 +185,13 @@ pom.xml의 maven-compiler-plugin 내 annotationProcessorPaths에 Lombok <version
 -> Controller로부터 Model에 담겨 넘어온 데이터를 가지고 최종적으로 사용자에게 보여줄 HTML 페이지를 '렌더링'
 -> board_list.html 파일은 Thymeleaf 문법(th:each, th:text 등)을 사용해서 Controller에서 Model에 담아준 "list" 데이터를 실제 게시글 제목과 내용으로 채워 넣고 동적으로 HTML을 생성
 
-
+▶ 게시물에 첨부파일 업로드 할수있는 기능
+1. 오류사항 : 게시글에 첨부된 파일을 클릭하면 Whitelabel Error Page 페이지 뜸
+※ 해결방안
+1. application.properties의 file.dir 경로를 애플리케이션이 인식할 수 있는 실제 폴더의 절대 경로로 명확하게 지정
+2. 윈도우 탐색기에서 해당 경로에 uploads 폴더를 수동으로 생성
+3. Spring Boot의 표준적인 파일 서빙 방법을 사용하기 위해 WebMvcConfigurer 인터페이스를 구현한 WebConfig.java 설정 클래스를 만들었어. 이 클래스에서 addResourceHandlers() 메서드를 오버라이드하여 /files/**라는 URL 요청을 실제 파일 저장 경로(file:///{절대경로}/uploads/)에 매핑
+4. application.properties의 spring.web.resources.static-locations 설정은 더 이상 필요 없어져서 주석 처리
 
 
 
