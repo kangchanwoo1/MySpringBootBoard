@@ -1,0 +1,78 @@
+▶ 톰캣서버 관련
+※ 톰캣시작 시 에러 날 경우 (보통 예전 톰캣이 백그라운드에서 돌고있을수있음)
+-> 해결방법(강제종료) : cmd -> netstat -ano | findstr :8080 -> PID번호 확인 -> taskkill /PID PID번호 /F
+
+▶ pom.xml 관련
+※ 헤드라인 오류 발생
+-> 원인 : spring-boot-starter-parent 4.0.0 라인 -> 정식으로 릴리스되지 않은 버젼이기 때문
+-> 해결방법 : 3.2.0으로 수정
+
+▶ 404에러 관련
+※ 스프링부트 run -> http://localhost:8080/ 조회시 404에러발생
+-> 원인 : Spring Boot가 실제로 실행하는 데 필요한 컴파일된 HelloController.class 파일은 누락되어 있는 상태
+-> class 파일이 없으니 Spring Boot는 컨트롤러의 존재조차 알 수 없었고, 그래서 어떤 웹 요청이 와도 처리해 줄 컨트롤러를 찾을 수 없어서 404에러 발생
+※ 원인 진단 과정
+1. 본 프로젝트 밖에서 PureJavaWebServer.java 파일을 만들어 실행 (Spring Boot나 Maven의 도움 없이 순수 자바 코드만으로 8080 포트에서 "Hello from Pure Java Web Server!" 페이지를 띄우는 간단한 프로그램) -> 접속성공 (DK, 8080 포트, 네트워크 통신은 완벽하게 작동
+되는것으로 확인)
+2.  404 에러의 원인은 시스템 환경이나 포트 문제가 아니라 오직 MySpringBootBoard 프로젝트의 "빌드 과정" 자체에 있다는 것을 확신!
+3. CMD에서 mvn clean install 명령어를 쳐서 정확한 에러 메시지를 확인
+4. 오류메시지 : [ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.11.0:compile (...) Resolution of annotationProcessorPath dependencies failed: version can neither be null, empty nor blank
+-> pom.xml에 명시된 maven-compiler-plugin이 annotationProcessorPaths라는 설정 내부에서 lombok의 '버전' 정보를 찾지 못해 컴파일을 실패했다는 뜻
+5. 수정사항 : pom.xml 파일의 <build> 섹션에서 maven-compiler-plugin 아래 annotationProcessorPaths 내부에 있는 lombok 의존성에 <version>1.18.30</version>을 명시적으로 추가
+6. pom.xml 저장 및 이클립스 Maven 프로젝트 업데이트 후, 다시 mvn clean install을 실행
+7. 해결완료 : 이번에는 BUILD SUCCESS 메시지가 뜨면서 HelloController.java를 비롯한 모든 소스 코드 파일들이 .class 파일로 성공적으로 컴파일되어 target/classes 폴더 안에 정상적으로 생성
+
+▶ Maven 명령어 인식 불가관련('mvn'은(는) 내부 또는 외부 명령이 아닙니다.)
+※ 문제발생 : CMD에서 mvn 명령어를 입력하자 "명령어를 인식할 수 없습니다" 에러 발생.
+※ 원인 : Maven이 Windows 시스템의 PATH 환경 변수에 등록되어 있지 않았기 때문에 터미널에서 mvn 명령어를 찾지 못함.
+※ 해결방법
+1. Maven 공식사이트에서 Maven설치경로로 설정
+2. 시스템 환경 변수 M2_HOME을 Maven 설치 경로로 설정.
+3. 시스템 PATH 변수에 %M2_HOME%\bin을 추가.
+4. CMD를 새로 열고 mvn -v를 통해 Maven 버전 정보가 정상 출력되는 것을 확인.
+
+※  mvn clean install 실행 시 MissingProjectException (잘못된 디렉토리)
+해결방법 : CMD -> cd /d -> 해당프로젝트 경로 조회확인 -> dir -> pom.xml이 정상적으로 존재하는 것을 확인.
+
+※ mvn clean install 실행 결과 BUILD FAILURE 발생.
+원인 : pom.xml의 <build> 섹션 내 maven-compiler-plugin 설정에서 annotationProcessorPaths에 포함된 lombok 의존성에 명시적인 <version> 정보가 누락되어 컴파일 플러그인이 해당 라이브러리를 찾지 못함.
+해결방법 : pom.xml 내 maven-compiler-plugin 설정 중 lombok path에 <version>1.18.30</version> 추가.
+-> 이클립스에서 Maven 프로젝트 업데이트 (Maven → Update Project...).
+-> CMD -> mvn clean install 다시 실행.
+-> BUILD SUCCESS
+
+▶ 포트 관련 오류 (Port 8080 was already in use.)
+원인 :  Spring Boot 내장 웹 서버(Tomcat)가 사용하려는 8080 포트를 이미 다른 프로그램이 점유하고 있음
+해결방법 : CMD -> netstat -aon | findstr "8080" -> taskkill /F /PID PID번호 (이 당시에 2960)
+
+▶ 데이터베이스 연동 관련
+1. pom.xml파일에 MySQL JDBC 드라이버 의존성 추가
+
+▶ 클래스 구문 오류발생 관련 1
+※ 진행 : src/main/java/com.example.MySpringBootBoard.service 패키지에 BoardService.java 클래스를 생성. BoardRepository를 주입받아 getList() 메서드를 통해 모든 게시글 목록을 불러오는 비즈니스 로직을 구현.
+1. 오류 발생 : private final BoardRepository boardRepository; 라인에서 The blank final field BoardRepository may not have been initialized 컴파일 에러 발생.
+2. 원인 : BoardService 클래스에 @RequiredArgsConstructor 어노테이션이 있었음에도 불구하고, Eclipse IDE가 Lombok 플러그인을 제대로 인식하지 못해 final 필드 boardRepository를 초기화할 생성자를 찾지 못했기 때문. 
+해결 : BoardService 클래스 내부에 public BoardService(BoardRepository boardRepository) { this.boardRepository = boardRepository; }와 같이 BoardRepository를 주입하는 생성자를 수동으로 직접 구현하여 에러 해결.
+
+※ 진행 : 기존 HelloController.java 파일을 수정하여 게시글 목록을 처리하는 BoardController로 변경. BoardService를 주입받아 /board/list 경로 요청 시 boardService.getList()를 호출하고, 결과를 board_list.html 템플릿으로 전달하도록 구현.
+1. 오류 발생 : public class BoardController { 라인에서 The public type BoardController must be defined in its own file 컴파일 에러 발생.
+2. 원인: HelloController.java 파일 내에서 클래스 이름만 public class BoardController로 변경하고, 파일 이름은 HelloController.java로 그대로 두었기 때문. Java 컴파일러는 public 클래스 이름과 파일 이름이 정확히 일치해야 함을 요구함.
+3. 해결 : 해결: Eclipse의 Refactor -> Rename... 기능을 사용하여 HelloController.java 파일 이름을 BoardController.java로 변경.
+
+1. 오류 발생 : private final BoardService boardService; 라인에서 The blank final field BoardService may not have been initialized 컴파일 에러 발생.
+2. 원인: BoardService와 동일하게 BoardController에도 @RequiredArgsConstructor 어노테이션이 붙어있었으나, Eclipse의 Lombok 플러그인 인식 문제로 인해 final 필드 boardService를 초기화할 생성자를 찾지 못했기 때문.
+3. 해결: BoardController 클래스 내부에 public BoardController(BoardService boardService) { this.boardService = boardService; }와 같이 BoardService를 주입하는 생성자를 수동으로 직접 구현하여 에러 해결.
+
+※ 진행 : src/main/resources/templates 폴더에 board_list.html 파일을 생성. Thymeleaf 문법을 사용하여 BoardController로부터 전달받을 boardList 데이터를 반복문(th:each)으로 출력하도록 구현. 부트스트랩 CSS CDN을 추가하여 기본 디자인 적용.
+1. 오류 발생 : http://localhost:8080/board/list 접속 시 Whitelabel Error Page 발생. (이전 오류 해결 후 재발)
+2. 원인: 로그 확인 결과, EL1008E: Property or field 'id' cannot be found on object of type 'com.example.MySpringBootBoard.entity.Board' - maybe not public or not valid? 에러가 출력됨. 이는 board_list.html에서 board.id, board.title 등에 접근하려 할 때, Board.java 엔티티 클래스에 Getter 메서드가 없다고 인식했기 때문. Board 클래스에 @Getter 어노테이션이 있었으나, BoardService, BoardController와 마찬가지로 Eclipse의 Lombok 플러그인 인식 문제로 getId(), getTitle() 등의 메서드가 Eclipse에서 생성되지 않은 것으로 간주된 것.
+해결: Board.java 엔티티 클래스 내부에 getId(), getTitle(), getContent(), getAuthor(), getCreateDate(), getModifyDate() 등 모든 필드에 대한 Getter 및 Setter 메서드를 수동으로 직접 구현하여 에러 해결. 
+
+▶ 클래스 구문 오류발생 관련 2
+1. 오류 발생 : BoardService에서 findById() 관련 에러
+-> 오류 메시지 : Optional cannot be resolved to a type / The method findById(Long) in the type CrudRepository<Board,Long> is not applicable for the arguments (Integer)
+2. 원인 : java.util.Optional 클래스에 대한 import 문이 BoardService.java 파일에 누락되었기 때문.
+3. 원인 : BoardRepository 인터페이스는 JpaRepository<Board, Integer>로 정의되어 Integer 타입의 ID를 처리해야 했음
+4. 해결 과정 : java.util.Optional import 추가: BoardService.java 파일 상단에 import java.util.Optional; 구문을 추가하여 Optional cannot be resolved 에러 해결.
+5. 해결과정 : BoardRepository.java 인터페이스에 Optional<Board> findById(Integer id) 라인에 @Override추가
+

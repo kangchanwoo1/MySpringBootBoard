@@ -39,7 +39,7 @@ public class BoardService {
         boardRepository.save(board); // 게시글 먼저 저장 -> board ID 생성됨 (이게 핵심!)
 
         if (files != null && !files.isEmpty()) {
-            // 💡 파일 저장 디렉토리 생성 로직 추가 (없으면 만들도록)
+            // 💡 파일 저장 디렉토리 생성 로직 추가
             File uploadPath = new File(fileDir);
             if (!uploadPath.exists()) { // uploads 폴더가 존재하지 않으면
                 uploadPath.mkdirs(); // uploads 폴더를 생성 (하위 폴더도 포함)

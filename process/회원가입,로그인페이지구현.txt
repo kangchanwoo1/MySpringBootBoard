@@ -1,0 +1,60 @@
+구현:
+User.java (엔티티):
+@Entity, @Table(name = "users"): 이 클래스가 DB의 users 테이블과 맵핑되는 '데이터 단위'임을 정의했어.
+필드들 (name, username, password 등): 사용자 정보 항목을 정의했고, 특히 username, email, phoneNumber에는 @Column(unique = true)를 붙여 DB에서 중복된 값이 저장되지 않도록 했지. (nullable = false는 필수 입력).
+@Id, @GeneratedValue(strategy = GenerationType.IDENTITY): 각 사용자에게 고유한 번호(id)를 자동으로 부여하도록 설정했어.
+@PrePersist, @PreUpdate: createDate와 modifyDate가 자동으로 기록되도록 했어.
+핵심: Lombok 문제로 인해 모든 필드에 대한 Getter/Setter를 수동으로 추가했지. (Lombok이 제 역할을 못 해서 발생했던 "Property cannot be found" 같은 에러들을 피하기 위해!)
+UserRepository.java (리포지토리):
+@Repository, extends JpaRepository<User, Integer>: User 엔티티와 DB 사이에 놓인 '데이터 접근 계층'을 담당해. JpaRepository를 상속받음으로써 User에 대한 기본적인 저장, 조회, 삭제 등의 DB 작업을 우리가 코딩하지 않아도 자동으로 할 수 있게 됐지!
+findByUsername(), findByEmail(), findByPhoneNumber(): Spring Data JPA의 쿼리 메서드 기능을 활용해서, 특정 username이나 email, phoneNumber로 User를 찾는 메서드를 정의했어. (우리가 직접 SQL을 짜지 않아도 돼!)
+해결했던 문제: User 엔티티를 만들고 애플리케이션 시작 시 Not a managed type: class com.example.MySpringBootBoard.entity.User 에러가 발생했어.
+원인: User.java 파일의 @Entity 어노테이션이 누락되었거나, jakarta.persistence.Entity로 제대로 임포트되지 않아서 JPA가 User 클래스를 DB와 매핑할 엔티티로 인식하지 못했기 때문이야.
+해결: User.java 파일에 jakarta.persistence.Entity 어노테이션을 정확히 추가 및 임포트하여 해결! 그 결과 DB에 users 테이블이 성공적으로 생성됐어.
+2. 비밀번호 암호화 준비: SecurityConfig의 PasswordEncoder
+목표: 사용자의 비밀번호를 절대 평문으로 DB에 저장하지 않고, 암호화하여 보안을 강화.
+구현:
+SecurityConfig.java: @Configuration 클래스에 @Bean으로 BCryptPasswordEncoder 객체를 등록했어.
+BCryptPasswordEncoder: 같은 비밀번호를 입력해도 매번 다른 암호화된 문자열을 생성하는 강력한 단방향 해시 알고리즘이야. 한번 암호화되면 다시 원래 비밀번호로 되돌릴 수 없어.
+해결했던 문제: UserService에서 PasswordEncoder를 사용하려고 할 때 The import org.springframework.security cannot be resolved 에러가 발생했어.
+원인: pom.xml에 Spring Security 관련 의존성이 추가되지 않았기 때문이야.
+해결: pom.xml에 spring-boot-starter-security 의존성을 추가하여 PasswordEncoder 및 Spring Security의 다른 기능들을 사용할 수 있도록 했어.
+3. 회원가입 핵심 로직: UserService의 join() 메서드
+목표: 사용자로부터 받은 회원 정보를 검증하고, 비밀번호를 암호화하여 DB에 안전하게 저장.
+구현:
+UserService.java: @Service 컴포넌트로 만들고, UserRepository와 PasswordEncoder를 주입받았어.
+join(User user) 메서드:
+@Transactional: 이 메서드 안의 DB 작업들이 하나의 논리적인 단위(트랜잭션)로 묶이게 해줘. 도중에 문제가 생기면 모든 변경 사항이 자동으로 취소돼 (롤백).
+중복 검사: userRepository의 findByUsername(), findByEmail(), findByPhoneNumber()를 사용해서, 회원가입하려는 아이디, 이메일, 핸드폰 번호가 이미 DB에 존재하는지 확인하고, 중복 시 IllegalStateException을 발생시켜 가입을 막았어.
+비밀번호 암호화: user.setPassword(passwordEncoder.encode(user.getPassword())) 코드로 사용자가 입력한 평문 비밀번호를 BCryptPasswordEncoder로 암호화하여 User 객체에 설정했어.
+userRepository.save(user): 최종적으로 암호화된 비밀번호를 가진 User 객체를 DB에 저장했지.
+4. 웹 화면 & 컨트롤러 연결: UserController & user_join_form.html, user_login_form.html
+목표: 사용자가 회원가입 및 로그인 정보를 입력할 수 있는 웹 화면을 제공하고, 해당 요청들을 백엔드 로직과 연결.
+구현:
+UserController.java: @Controller, @RequestMapping("/user")로 웹 요청을 처리하는 역할을 해. UserService를 주입받아 비즈니스 로직을 호출했어.
+joinForm() (GET /user/join): 회원가입 폼 (user_join_form.html)을 보여주는 역할을 해.
+join() (POST /user/join): 회원가입 폼에서 제출된 데이터를 받아 userService.join()을 호출해. 성공하면 로그인 페이지로 리다이렉트하고, 실패하면 에러 메시지와 함께 다시 폼을 보여줘.
+loginForm() (GET /user/login): 로그인 폼 (user_login_form.html)을 보여주는 역할을 해. (아직 로그인 처리 로직은 아님)
+user_join_form.html: Thymeleaf를 이용한 HTML 폼이야. th:action, th:object, th:field를 사용해서 백엔드의 User 객체와 데이터를 주고받을 수 있도록 했고, errorMessage를 표시하는 기능도 포함했어.
+user_login_form.html: 로그인 아이디와 비밀번호를 입력받는 간단한 HTML 폼이야. 아직 로그인 처리 로직은 연결 전이라 action="#"으로 두었고, "회원가입" 버튼을 추가했지.
+5. Spring Security 핵심 설정: SecurityConfig 보완 (접근 제어)
+목표: 웹 애플리케이션의 보안을 설정하고, 어떤 페이지는 로그인 없이 접근 가능하게 하고, 어떤 페이지는 로그인해야만 접근 가능하게 제어하며, 실제 로그인 처리 과정을 Spring Security에 위임.
+구현:
+@EnableWebSecurity: Spring Security의 웹 보안 기능을 활성화했어.
+filterChain(HttpSecurity http) 메서드:
+csrf().disable(): 개발 편의상 CSRF 보호를 일시적으로 비활성화했어.
+authorizeHttpRequests(): 핵심!
+requestMatchers("/user/join", "/user/login", "/", "/board/**", "/css/**", "/js/**", "/images/**").permitAll(): 우리가 만든 회원가입, 로그인 페이지, 메인 페이지, 게시글 목록 및 상세 페이지, 그리고 CSS/JS/이미지 같은 정적 리소스들은 로그인 없이도 (permitAll()) 접근을 허용하도록 설정했어. 이 설정 덕분에 "계속 로그인 창으로만 들어가던" 문제가 해결됐지!
+anyRequest().authenticated(): 그 외의 모든 페이지는 반드시 로그인한 (authenticated()) 사용자만 접근할 수 있도록 막아뒀어.
+formLogin(): 폼 기반 로그인 방식을 설정해.
+loginPage("/user/login"): 우리가 만든 /user/login 경로의 HTML을 로그인 페이지로 사용하도록 지정했어.
+loginProcessingUrl("/user/doLogin"): 이게 바로 로그인 폼이 POST 요청을 보낼 URL을 Spring Security에게 알려주는 거야. 이 URL로 들어온 요청은 Spring Security가 자동으로 가로채서 로그인 처리를 시작하기 때문에, 우리가 이 경로에 대한 별도의 @PostMapping 메서드를 만들 필요가 없어!
+defaultSuccessUrl("/board/list", true): 로그인 성공 시 기본적으로 /board/list로 이동하게 했어.
+failureUrl("/user/login?error=true"): 로그인 실패 시 ?error=true 파라미터를 붙여 로그인 페이지로 다시 보냈지.
+logout(): 로그아웃 요청("/user/logout")을 처리하고, 성공 시 로그인 페이지로 (/user/login?logout=true) 이동하도록 설정했어.
+AuthenticationManager 빈 등록: AuthenticationManager는 Spring Security의 인증을 수행하는 핵심 객체로, UserSecurityService와 PasswordEncoder를 활용하여 사용자 인증 과정을 관리해.
+6. 사용자 인증 정보 로드: UserSecurityService
+목표: 사용자가 로그인할 때 입력한 아이디(username)를 기반으로 DB에서 사용자 정보를 가져와 Spring Security가 이해할 수 있는 UserDetails 객체 형태로 반환.
+구현:
+UserSecurityService.java: UserDetailsService 인터페이스를 구현했어. UserRepository를 주입받아 DB에 접근했지.
+loadUserByUsername(String username): Spring Security가 이 메서드를 호출하면서 사용자가 입력한 아이디를 넘겨줘. 이 메서드 안에서는 userRepository.findByUsername(username)으로 DB에서 User 객체를 찾고, 없으면 UsernameNotFoundException 예외를 발생시켜. 찾으면, User 엔티티 정보를 Spring Security가 요구하는 org.springframework.security.core.userdetails.User (UserDetails 구현체) 객체로 변환하여 반환했어.

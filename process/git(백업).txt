@@ -1,0 +1,20 @@
+※ 백업 및 버젼관리 시스템 (git) 
+ - git bash -> cd D:/SpringBootBoard/MySpringBootBoard/MySpringBootBoard (프로젝트의 최상위 폴더 이동 명령어)
+  -> git bash를 사용할때 무조건 입력 해야함!
+ - git init -> 초기화 되어있다면 -> Reinitialized existing Git repository in .../.git/ ( 로컬 저장소 초기화 명령어)
+ - 이클립스에서 .gitignore 파일 생성 -> MySpringBootBoard 프로젝트의 최상위 폴더 -> new -> file
+  -> 해당 코드에 관련 코드 작성 및 저장
+ - git bash -> git add . (.gitignore 파일에 의해 무시되는 파일을 제외하고, 모든 프로젝트 파일들을 Git이 추적하고 관리할 준비 명령어, 별다른 오류가 없다면 성공)
+ -  git bash -> git commit -m "Initial commit: Set up MySpringBootBoard project" (변경사항 로컬 저장소에 커밋 명령어) -> nothing to commit, working tree clean 메시지가 뜨면 이미 커밋이 완료된 상태
+-  git bash -> git remote add origin https://github.com/kangchanwoo1/MySpringBootBoard.git -> error: remote origin already exists. 라고 뜨면 origin이라는 이름으로 원격 저장소 추가하려고 하는데, 그 이름은 이미 사용 중이라는 뜻
+-  git bash -> git remote -v -> origin  https://github.com/kangchanwoo1/MySpringBootBoard.git (fetch)
+                                          origin  https://github.com/kangchanwoo1/MySpringBootBoard.git (push) 라고 뜨면 로컬 Git 저장소가 kangchanwoo1/MySpringBootBoard.git GitHub 저장소와 origin이라는 이름으로 완벽하게 연결되어 있다는 뜻
+-  git bash -> git push -u origin main -> MySpringBootBoard 프로젝트 코드들을 이 잘 연결된 GitHub 저장소로 업로드 (한번 성공적으로 인증되면 다시 id/pw를 묻는 자격증명 뜨지않음)
+※ git 버전관리 관련
+ - 이클립스 상에서 코드를 수정
+ -  git bash -> git add . -> git에게 이 파일들을 커밋할준비가 되었다고 알려주는 명령어
+ - git bash -> git commit -m "메시지(ex : 게시글 수정 기능 구현)" -> git은 내 로컬 컴퓨터에 버젼이 저장되었다고 기록하는 명령어
+ - git bash -> git push origin main -> 로컬에 기록된 버전을 GitHub로 푸시해서 최종 백업하는 명령어
+※ 만약 로컬 코드가 GitHub보다 뒤쳐져 있다면, git pull origin main을 먼저 하라는 에러가 뜰 수 있는데 그럴 땐 git pull origin main → git push origin main 순서로 하면 됨
+※ https://github.com/kangchanwoo1/MySpringBootBoard -> 현재 프로젝트가 저장되어있는 git url
+※ git status -> 변경사항 확인 명령어

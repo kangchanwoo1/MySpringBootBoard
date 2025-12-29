@@ -1,0 +1,57 @@
+접속 URL : http://localhost:8080/board/list
+접속 URL : http://localhost:8080/user/login?logout=true
+
+▶ 개발환경 세팅 내역
+※ 자바개발 키트(JDK)
+ - OpenJDK 21 (버전: 21.0.9)
+※ 통합 개발 환경 (IDE)
+ - Eclipse IDE for Enterprise Java and Web Developers (이유 : Spring Tools (STS)가 내장되어 있어 Spring Boot 개발에 최적화됨)
+※ 빌드도구
+ - Apache Maven (버전: 3.9.11)
+ -> 설정 : 시스템 환경 변수 M2_HOME에 Maven 설치 경로 지정 및 PATH 환경 변수에 %M2_HOME%\bin 추가.
+※ 웹 프레임 워크
+ - Spring Boot (버전: v3.2.0)
+ -> 핵심 의존성 : spring-boot-starter-web, spring-boot-starter-thymeleaf, spring-boot-devtools, lombok, mysql-connector-j, spring-boot-starter-data-jpa
+-> 설정 : pom.xml에서 spring-boot-starter-parent 버전 **3.2.0**으로 명확히 지정.
+pom.xml의 maven-compiler-plugin 내 annotationProcessorPaths에 Lombok <version>1.18.30</version> 명시.
+※  웹 서버
+ - Apache Tomcat9.0.112 (Spring Boot와는 별개이며, JSP/Servlet 프로젝트를 이클립스에 연동할 때 사용) -> 스프링부트 프로젝트에는 미사용
+ - Apache Tomcat/10.1.16 (Spring Boot에 기본적으로 내장되어 있으며, 8080 포트 사용.)
+※ 데이터베이스 관련
+ - MySQL -> 스키마(DB명): board_db
+ - 데이터베이스 관리 도구: MySQL Workbench -> 스키마 생성 및 테이블 구조 확인 용도
+ -> 사용순서
+ 1. board_db라는 데이터베이스 생성
+ 2. application.properties 설정 -> spring.datasource.url, username, password: MySQL 서버 연결 정보를 설정해서 애플리케이션이 DB에 접근할수있도록 추가
+3. Board 엔티티 (Board.java) -> @Entity, @Table, @Id, @GeneratedValue, @Column 등의 JPA 어노테이션을 사용하여 각 필드가 데이터베이스의 컬럼(열)에 어떻게 매핑되는지를 명시
+4. BoardRepository 인터페이스 -> JpaRepository<Board, Integer>를 상속받아서 기본적인 CRUD 메서드(findAll, findById, save, deleteById 등)들을 자동으로 사용할 수 있게 했어. SQL 쿼리 없이 메소드 호출만으로 DB 조작이 가능해졌음
+5. Create(생성) : 게시글생성/저장
+ - 목표: 새로운 게시글 데이터를 데이터베이스에 추가.
+ - BoardService 메서드: boardService.write(Board board)
+ - BoardRepository 메서드: boardRepository.save(board)
+ -> 원리: Board 객체를 받아 createDate를 현재 시간으로 설정.
+ -> boardRepository.save() 메서드를 호출하여 board 객체를 데이터베이스의 board 테이블에 새로운 레코드(행)로 삽입 (INSERT).
+6. Read(읽기) : 게시글 조회
+ - 목표1 : 데이터베이스에 있는 모든 게시글 목록을 불러옴.
+ - BoardService 메서드: boardService.boardList()
+ - BoardRepository 메서드: boardRepository.findAll()
+ -> 원리 : boardRepository.findAll() 메서드를 호출하여 board 테이블의 모든 레코드를 List<Board> 형태로 조회 (SELECT * FROM board).
+ - 목표2 : 특정 id를 가진 게시글의 상세 정보를 불러옴
+ -> BoardService 메서드: boardService.getBoard(Integer id)
+ -> BoardRepository 메서드: boardRepository.findById(id)
+ -> 원리 : boardRepository.findById(id) 메서드를 호출하여 특정 id에 해당하는 레코드를 조회 (SELECT * FROM board WHERE id = ?).
+ -> 결과를 Optional<Board>로 받아 게시글이 존재하면 반환하고, 없으면 null 처리.
+7. Update(수정) : 게시글 수정
+ - 목표 : 특정 id를 가진 게시글의 상세 정보를 불러옴.
+ - BoardService 메서드: boardService.updateBoard(Board board)
+ - BoardRepository 메서드: boardRepository.findById(id) 와 boardRepository.save(existingBoard) 조합.
+ - 원리
+ 1. @Transactional 어노테이션으로 트랜잭션을 묶음
+ 2. 먼저 findById()로 기존 게시글(existingBoard)을 데이터베이스에서 불러옴
+ 3. 불러온 existingBoard 객체의 title, author, content, modifyDate 필드를 수정 요청으로 받은 새 값으로 업데이트.
+ 4. 변경된 existingBoard 객체를 boardRepository.save() 메서드에 다시 넘기면, id가 존재하기 때문에 JPA가 이를 감지하고 해당 레코드를 업데이트 (UPDATE)하는 SQL을 실행
+8. Delete(삭제) : 게시글 삭제
+ - 목표: 특정 id를 가진 게시글을 데이터베이스에서 제거.
+ - BoardService 메서드: boardService.deleteBoard(Integer id)
+ - BoardRepository 메서드: boardRepository.deleteById(id)
+  - > 원리 : boardRepository.deleteById(id) 메서드를 호출하여 특정 id에 해당하는 레코드를 데이터베이스에서 삭제 (DELETE FROM board WHERE id = ?).
